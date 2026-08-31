@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nova Studio — Kod yazmanın yeni yolu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Playfair+Display:ital,wght@500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root{--ink:#172119;--paper:#f4f2ec;--acid:#d7f454;--line:#cbd0c6;--orange:#ff5b35}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:15px system-ui,sans-serif}.grain{position:fixed;inset:0;pointer-events:none;opacity:.04;background-image:radial-gradient(#172119 1px,transparent 1px);background-size:5px 5px}.topbar,footer{display:flex;align-items:center;justify-content:space-between;padding:0 4vw}.topbar{height:82px;border-bottom:1px solid var(--line);position:relative}.brand{font-size:21px;font-weight:800;letter-spacing:-1.5px;color:inherit;text-decoration:none}.brand span{font-weight:400;color:#687068}nav,footer div{display:flex;gap:25px}nav a,.contact-link,footer a{color:inherit;text-decoration:none;font-size:13px}.hero{min-height:670px;padding:52px 12vw;position:relative;overflow:hidden}.eyebrow,.section-label{font:10px ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}.eyebrow i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:8px}h1{font-size:clamp(62px,9vw,132px);line-height:.91;letter-spacing:-.08em;font-weight:500;margin:88px 0 70px;position:relative}em{font-family:Georgia,serif}.hero-bottom{display:flex;justify-content:space-between;align-items:end;position:relative}.hero-bottom p{max-width:370px;font-size:16px;line-height:1.5}.round-button{display:grid;place-items:center;width:75px;height:75px;border-radius:50%;background:var(--ink);color:var(--acid);font-size:26px;text-decoration:none}.orb{position:absolute;border-radius:50%;mix-blend-mode:multiply}.orb-one{width:430px;height:430px;background:var(--acid);right:6vw;top:100px}.orb-two{width:180px;height:180px;background:var(--orange);right:31vw;bottom:-65px}.statement{background:var(--ink);color:var(--paper);padding:105px 12vw}.statement-copy{font-size:clamp(38px,5vw,76px);line-height:1.06;letter-spacing:-.06em;margin:72px 0 55px}.statement-copy em{color:var(--acid)}.statement-note{max-width:370px;line-height:1.6;color:#c1c9bc}.selected-work{padding:110px 4vw}.section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:38px}.section-heading a{color:inherit}.projects{display:grid;grid-template-columns:1fr 1fr;gap:22px}.project-visual{height:450px;position:relative;overflow:hidden}.nova-card{background:#303147;color:#eee}.moon{position:absolute;width:240px;height:240px;border-radius:50%;background:#f4c58b;left:50%;top:65px;transform:translateX(-50%)}.nova-word{position:absolute;bottom:64px;left:50%;transform:translateX(-50%);font:clamp(70px,10vw,150px) Georgia,serif;letter-spacing:-.12em}.nova-sub{position:absolute;bottom:35px;width:100%;text-align:center;font:9px ui-monospace,monospace;letter-spacing:.18em}.atelier-card{background:#df3c22}.atelier-grid{position:absolute;inset:0;background:linear-gradient(90deg,transparent 49.8%,#ffffff55 50%,transparent 50.2%),linear-gradient(transparent 49.8%,#ffffff55 50%,transparent 50.2%);background-size:74px 74px}.atelier-word{position:absolute;top:45px;left:40px;color:#f7d6bd;font:80px/.72 Georgia,serif}.atelier-square{position:absolute;width:150px;height:150px;right:16%;bottom:60px;background:var(--ink);transform:rotate(15deg)}.project-meta{display:flex;justify-content:space-between;padding:16px 0}.project-meta h2{margin:0;font-size:18px}.project-meta p,.project-meta>span{margin:5px 0;color:#697068;font-size:12px}.services{display:grid;grid-template-columns:1fr 1fr;gap:8vw;padding:100px 12vw;border-top:1px solid var(--line)}.services-intro{font-size:22px;line-height:1.3}.service-list{border-top:1px solid var(--line)}.service{width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:22px 0;display:grid;grid-template-columns:60px 1fr 25px;text-align:left;cursor:pointer}.service.active{padding-left:10px}.service span{font:10px ui-monospace,monospace;color:#687068}.service b{font-size:20px}.service i,.email span{color:var(--orange)}.cta{background:var(--acid);padding:100px 12vw}.cta h2{font-size:clamp(48px,6vw,90px);line-height:.96;letter-spacing:-.07em;font-weight:500;margin:70px 0}.email{color:inherit;font-size:18px;font-weight:700}footer{min-height:100px;background:var(--ink);color:var(--paper)}footer p{font-size:11px;color:#b5bdb0}@media(max-width:700px){.topbar{height:70px;padding:0 20px}.topbar nav{display:none}.hero,.statement,.cta{padding-left:24px;padding-right:24px}.hero{min-height:600px}.orb-one{width:250px;height:250px;right:-70px}.projects,.services{grid-template-columns:1fr}.selected-work{padding:75px 20px}.project-visual{height:350px}.services{padding:75px 24px;gap:25px}footer{padding:25px 20px;display:grid;gap:12px}}
+    </style>
+  </head>
+  <body>
+    <div class="grain"></div>
+    <header class="topbar">
+      <a class="brand" href="#">nova<span>studio</span></a>
+      <nav aria-label="Ana menü">
+        <a href="#work">Çalışmalar</a><a href="#tools">Araçlar</a><a href="#about">Hakkımızda</a>
+      </nav>
+      <a class="contact-link" href="mailto:hello@novastudio.dev">Birlikte üretelim <span>↗</span></a>
+    </header>
+
+    <main>
+      <section class="hero" id="about">
+        <div class="eyebrow"><i></i> İstanbul · Dünya için üretiyoruz</div>
+        <h1>Kod, yalnızca<br /><em>çalışmamalı.</em><br />Hissettirmeli.</h1>
+        <div class="hero-bottom">
+          <p>Fikirleri, insanların her gün kullanmak istediği rafine dijital deneyimlere dönüştüren bağımsız bir yaratıcı teknoloji stüdyosuyuz.</p>
+          <a class="round-button" href="#work" aria-label="Çalışmaları keşfet"><span>↓</span></a>
+        </div>
+        <div class="orb orb-one"></div><div class="orb orb-two"></div>
+      </section>
+
+      <section class="statement">
+        <p class="section-label">01 — Yaklaşımımız</p>
+        <div class="statement-copy">Güzel olanı <em>işlevsel,</em><br />karmaşık olanı <em>sezgisel</em><br />hale getiriyoruz.</div>
+        <p class="statement-note">Stratejiden piksele, tasarımdan satıra. Küçük, kıymetli detayların büyük farklar yarattığına inanıyoruz.</p>
+      </section>
+
+      <section class="selected-work" id="work">
+        <div class="section-heading"><p class="section-label">02 — Seçili işler</p><a href="#all">Tüm projeler <span>↗</span></a></div>
+        <div class="projects">
+          <article class="project project-nova">
+            <div class="project-visual nova-card" aria-label="Lune Hotels için gece göğü konsepti">
+              <span class="moon" aria-hidden="true"></span><span class="nova-word">LUNE</span><span class="nova-sub">a considered stay</span>
+            </div>
+            <div class="project-meta"><div><h2>Lune Hotels</h2><p>Marka kimliği · Dijital deneyim</p></div><span>2024</span></div>
+          </article>
+          <article class="project">
+            <div class="project-visual atelier-card" aria-label="Atelier 8 için tipografik ticaret konsepti">
+              <div class="atelier-grid" aria-hidden="true"></div><span class="atelier-word">atelier<br />8<span>°</span></span><span class="atelier-square" aria-hidden="true"></span>
+            </div>
+            <div class="project-meta"><div><h2>Atelier 8</h2><p>E-ticaret · Yaratıcı geliştirme</p></div><span>2024</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="services" id="tools">
+        <div><p class="section-label">03 — Neler yapıyoruz</p><p class="services-intro">Tek bir ekranda başlayan fikirleri, sağlam ve yaşayan markalara dönüştürüyoruz.</p></div>
+        <div class="service-list">
+          <button class="service active" type="button" aria-pressed="true"><span>01</span><b>Marka &amp; Strateji</b><i aria-hidden="true">↗</i></button>
+          <button class="service" type="button" aria-pressed="false"><span>02</span><b>Ürün Tasarımı</b><i aria-hidden="true">↗</i></button>
+          <button class="service" type="button" aria-pressed="false"><span>03</span><b>Web Deneyimleri</b><i aria-hidden="true">↗</i></button>
+          <button class="service" type="button" aria-pressed="false"><span>04</span><b>Yaratıcı Teknoloji</b><i aria-hidden="true">↗</i></button>
+        </div>
+      </section>
+
+      <section class="cta">
+        <p class="section-label">04 — Bir sonraki proje</p>
+        <h2>Birlikte sıra dışı<br />bir şey <em>yapalım.</em></h2>
+        <a href="mailto:hello@novastudio.dev" class="email">hello@novastudio.dev <span>↗</span></a>
+      </section>
+    </main>
+    <footer><a class="brand" href="#">nova<span>studio</span></a><p>© 2026 Nova Studio. İstanbul’da özenle yapıldı.</p><div><a href="#instagram">Instagram</a><a href="#linkedin">LinkedIn</a></div></footer>
+    <script>
+      document.querySelectorAll('.service').forEach((service) => service.addEventListener('click', () => {
+        document.querySelectorAll('.service').forEach((item) => { item.classList.remove('active'); item.setAttribute('aria-pressed', 'false'); });
+        service.classList.add('active'); service.setAttribute('aria-pressed', 'true');
+      }));
+    </script>
+  </body>
+</html>
