@@ -10,24 +10,83 @@ jobs:
 
     steps:
       - name: Configure Core RDP Settings
+        shell: powershell
         run: |
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
-                             -Name "fDenyTSConnections" -Value 0 -Force
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
-                             -Name "UserAuthentication" -Value 0 -Force
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
-                             -Name "SecurityLayer" -Value 0 -Force
+          # Enable RDP
+          Set-ItemProperty `
+            -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' `
+            -Name "fDenyTSConnections" `
+            -Value 0 `
+            -Force
+
+          # Allow RDP connections without NLA
+          Set-ItemProperty `
+            -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
+            -Name "UserAuthentication" `
+            -Value 0 `
+            -Force
+
+          # RDP security layer
+          Set-ItemProperty `
+            -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' `
+            -Name "SecurityLayer" `
+            -Value 0 `
+            -Force
+
+          # ==========================================================
+          # MICROPHONE / AUDIO CAPTURE REDIRECTION
+          # ==========================================================
+
+          $policyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
+
+          New-Item `
+            -Path $policyPath `
+            -Force | Out-Null
+
+          # 0 = allow audio recording redirection
+          New-ItemProperty `
+            -Path $policyPath `
+            -Name "fDisableAudioCapture" `
+            -PropertyType DWord `
+            -Value 0 `
+            -Force | Out-Null
+
+          # Also configure the RDP-Tcp listener
+          $rdpPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp'
+
+          New-ItemProperty `
+            -Path $rdpPath `
+            -Name "fDisableAudioCapture" `
+            -PropertyType DWord `
+            -Value 0 `
+            -Force | Out-Null
+
+          # Apply policies
+          gpupdate /force
+
+          # ==========================================================
+          # FIREWALL
+          # ==========================================================
 
           netsh advfirewall firewall delete rule name="RDP-Tailscale"
 
-          netsh advfirewall firewall add rule name="RDP-Tailscale" `
-            dir=in action=allow protocol=TCP localport=3389
+          netsh advfirewall firewall add rule `
+            name="RDP-Tailscale" `
+            dir=in `
+            action=allow `
+            protocol=TCP `
+            localport=3389
 
           Restart-Service -Name TermService -Force
 
+          Write-Host "RDP enabled."
+          Write-Host "RDP microphone/audio capture redirection enabled."
+
       - name: Create RDP User with Secure Password
+        shell: powershell
         run: |
           Add-Type -AssemblyName System.Security
+
           $charSet = @{
               Upper   = [char[]](65..90)
               Lower   = [char[]](97..122)
@@ -45,11 +104,21 @@ jobs:
           $password = -join ($rawPassword | Sort-Object { Get-Random })
           $securePass = ConvertTo-SecureString $password -AsPlainText -Force
 
-          New-LocalUser -Name "Draghyper" -Password $securePass -AccountNeverExpires
-          Add-LocalGroupMember -Group "Administrators" -Member "Draghyper"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "Draghyper"
+          New-LocalUser `
+            -Name "Draghyper" `
+            -Password $securePass `
+            -AccountNeverExpires
 
-          echo "RDP_CREDS=User: Draghyper | Password: $password" >> $env:GITHUB_ENV
+          Add-LocalGroupMember `
+            -Group "Administrators" `
+            -Member "Draghyper"
+
+          Add-LocalGroupMember `
+            -Group "Remote Desktop Users" `
+            -Member "Draghyper"
+
+          echo "RDP_USERNAME=Draghyper" >> $env:GITHUB_ENV
+          echo "RDP_PASSWORD=$password" >> $env:GITHUB_ENV
 
           if (-not (Get-LocalUser -Name "Draghyper")) {
               Write-Error "User creation failed"
@@ -57,17 +126,28 @@ jobs:
           }
 
       - name: Install Tailscale
+        shell: powershell
         run: |
           $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
           $installerPath = "$env:TEMP\tailscale.msi"
 
-          Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
-          Start-Process msiexec.exe -ArgumentList "/i", "`"$installerPath`"", "/quiet", "/norestart" -Wait
+          Invoke-WebRequest `
+            -Uri $tsUrl `
+            -OutFile $installerPath
+
+          Start-Process msiexec.exe `
+            -ArgumentList "/i", "`"$installerPath`"", "/quiet", "/norestart" `
+            -Wait
+
           Remove-Item $installerPath -Force
 
       - name: Establish Tailscale Connection
+        shell: powershell
         run: |
-          & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} --hostname=gh-runner-$env:GITHUB_RUN_ID
+          & "$env:ProgramFiles\Tailscale\tailscale.exe" `
+            up `
+            --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} `
+            --hostname=gh-runner-$env:GITHUB_RUN_ID
 
           $tsIP = $null
           $retries = 0
@@ -86,10 +166,13 @@ jobs:
           echo "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
 
       - name: Verify RDP Accessibility
+        shell: powershell
         run: |
           Write-Host "Tailscale IP: $env:TAILSCALE_IP"
 
-          $testResult = Test-NetConnection -ComputerName $env:TAILSCALE_IP -Port 3389
+          $testResult = Test-NetConnection `
+            -ComputerName $env:TAILSCALE_IP `
+            -Port 3389
 
           if (-not $testResult.TcpTestSucceeded) {
               Write-Error "TCP connection to RDP port 3389 failed"
@@ -99,14 +182,14 @@ jobs:
           Write-Host "TCP connectivity successful!"
 
       - name: Maintain Connection
+        shell: powershell
         run: |
           Write-Host "`n=== RDP ACCESS ==="
           Write-Host "Address: $env:TAILSCALE_IP"
-          Write-Host "Username: Draghyper"
-          Write-Host "Password: $env:RDP_CREDS"
+          Write-Host "Username: $env:RDP_USERNAME"
           Write-Host "==================`n"
 
           while ($true) {
-              Write-Host "[$(Get-Date)] RDP Active - Use Ctrl+C in workflow to terminate"
+              Write-Host "[$(Get-Date)] RDP Active"
               Start-Sleep -Seconds 300
           }
