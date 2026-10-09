@@ -1,0 +1,184 @@
+name: RDP
+
+on:
+  workflow_dispatch:
+
+jobs:
+  secure-rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Free Temporary Disk Space
+        shell: powershell
+        run: |
+          Write-Host "=== Disk space before cleanup ==="
+          Get-PSDrive C
+
+          $tempPaths = @(
+            $env:TEMP,
+            "$env:WINDIR\Temp"
+          )
+
+          foreach ($path in $tempPaths) {
+            if (Test-Path $path) {
+              Get-ChildItem -LiteralPath $path -Force `
+                -ErrorAction SilentlyContinue |
+                Remove-Item -Recurse -Force `
+                -ErrorAction SilentlyContinue
+            }
+          }
+
+          Write-Host "=== Disk space after cleanup ==="
+          Get-PSDrive C
+
+      - name: Configure Core RDP Settings
+        shell: powershell
+        run: |
+          $tsPath = 'HKLM:\System\CurrentControlSet\Control\Terminal Server'
+          $rdpPath = "$tsPath\WinStations\RDP-Tcp"
+          $policyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services'
+
+          Set-ItemProperty -Path $tsPath `
+            -Name fDenyTSConnections -Value 0 -Force
+
+          Set-ItemProperty -Path $rdpPath `
+            -Name UserAuthentication -Value 0 -Force
+
+          Set-ItemProperty -Path $rdpPath `
+            -Name SecurityLayer -Value 0 -Force
+
+          New-Item -Path $policyPath -Force | Out-Null
+
+          New-ItemProperty -Path $policyPath `
+            -Name fDisableAudioCapture `
+            -PropertyType DWord -Value 0 -Force | Out-Null
+
+          New-ItemProperty -Path $rdpPath `
+            -Name fDisableAudioCapture `
+            -PropertyType DWord -Value 0 -Force | Out-Null
+
+          gpupdate /force
+
+          netsh advfirewall firewall delete rule name="RDP-Tailscale"
+
+          netsh advfirewall firewall add rule `
+            name="RDP-Tailscale" dir=in action=allow `
+            protocol=TCP localport=3389
+
+          Restart-Service -Name TermService -Force
+
+          Write-Host "RDP and microphone redirection settings applied."
+
+      - name: Create RDP User with Secure Password
+        shell: powershell
+        run: |
+          $username = "Draghyper"
+          $existingUser = Get-LocalUser -Name $username `
+            -ErrorAction SilentlyContinue
+
+          $charSet = @{
+            Upper   = [char[]](65..90)
+            Lower   = [char[]](97..122)
+            Number  = [char[]](48..57)
+            Special = ([char[]](33..47) + [char[]](58..64) +
+                       [char[]](91..96) + [char[]](123..126))
+          }
+
+          $rawPassword = @()
+          $rawPassword += $charSet.Upper | Get-Random -Count 4
+          $rawPassword += $charSet.Lower | Get-Random -Count 4
+          $rawPassword += $charSet.Number | Get-Random -Count 4
+          $rawPassword += $charSet.Special | Get-Random -Count 4
+
+          $password = -join ($rawPassword | Sort-Object { Get-Random })
+          $securePass = ConvertTo-SecureString $password -AsPlainText -Force
+
+          if ($existingUser) {
+            Set-LocalUser -Name $username -Password $securePass
+          } else {
+            New-LocalUser -Name $username `
+              -Password $securePass -AccountNeverExpires
+          }
+
+          Add-LocalGroupMember -Group Administrators `
+            -Member $username -ErrorAction SilentlyContinue
+
+          Add-LocalGroupMember -Group "Remote Desktop Users" `
+            -Member $username -ErrorAction SilentlyContinue
+
+          "RDP_USERNAME=$username" >> $env:GITHUB_ENV
+          "RDP_PASSWORD=$password" >> $env:GITHUB_ENV
+
+          Write-Host "RDP account configured."
+
+      - name: Install Tailscale
+        shell: powershell
+        run: |
+          $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
+          $installerPath = "$env:TEMP\tailscale.msi"
+
+          Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
+
+          Start-Process msiexec.exe `
+            -ArgumentList "/i", "`"$installerPath`"", "/quiet", "/norestart" `
+            -Wait
+
+          Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
+
+      - name: Establish Tailscale Connection
+        shell: powershell
+        env:
+          TAILSCALE_AUTH_KEY: ${{ secrets.TAILSCALE_AUTH_KEY }}
+        run: |
+          if (-not $env:TAILSCALE_AUTH_KEY) {
+            throw "Add TAILSCALE_AUTH_KEY in repository Actions secrets."
+          }
+
+          $tsExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
+
+          & $tsExe up `
+            --authkey=$env:TAILSCALE_AUTH_KEY `
+            --hostname=gh-runner-$env:GITHUB_RUN_ID
+
+          $tsIP = $null
+          for ($i = 0; $i -lt 12 -and -not $tsIP; $i++) {
+            Start-Sleep -Seconds 5
+            $result = & $tsExe ip -4
+            if ($LASTEXITCODE -eq 0 -and $result) {
+              $tsIP = ($result | Select-Object -First 1).Trim()
+            }
+          }
+
+          if (-not $tsIP) {
+            throw "Tailscale IP was not assigned."
+          }
+
+          "TAILSCALE_IP=$tsIP" >> $env:GITHUB_ENV
+
+      - name: Verify RDP Accessibility
+        shell: powershell
+        run: |
+          Write-Host "Tailscale IP: $env:TAILSCALE_IP"
+
+          $result = Test-NetConnection `
+            -ComputerName $env:TAILSCALE_IP -Port 3389
+
+          if (-not $result.TcpTestSucceeded) {
+            Write-Warning "RDP port test failed; check listener and network settings."
+          } else {
+            Write-Host "TCP connectivity successful."
+          }
+
+      - name: Maintain Connection
+        shell: powershell
+        run: |
+          Write-Host "RDP address: $env:TAILSCALE_IP"
+          Write-Host "RDP username: $env:RDP_USERNAME"
+          Write-Host "Password is generated for this run; retrieve it only through a secure channel."
+
+          while ($true) {
+            Write-Host "[$(Get-Date)] RDP active"
+            Start-Sleep -Seconds 300
+          }
+          
